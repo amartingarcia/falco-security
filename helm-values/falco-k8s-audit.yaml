@@ -1,0 +1,45 @@
+# https://github.com/falcosecurity/charts/blob/master/falco/values.yaml
+fullnameOverride: "falco-k8s-audit"
+
+auditLog:
+  enabled: true
+  listenPort: 9765
+  nodePort: false
+
+falco:
+  rulesFile:
+    # https://github.com/falcosecurity/charts/blob/master/falco/rules/k8s_audit_rules.yaml
+    - /etc/falco/k8s_audit_rules.yaml
+
+  plugins:
+    - name: k8saudit
+      library_path: libk8saudit.so
+      init_config:
+        ""
+      open_params: "http://:9765/k8s-audit"
+    - name: json
+      library_path: libjson.so
+      init_config: ""
+
+  loadPlugins:  [k8saudit, json]
+  
+  timeFormatISO8601: true
+  jsonOutput: true
+  jsonIncludeOutputProperty: true
+  jsonIncludeTagsProperty: true
+
+  httpOutput:
+    enabled: true
+    url: "http://falcosidekick:2801"
+    userAgent: "falcosecurity/falco"
+
+  webserver:
+    enabled: true
+    listenPort: 8765
+    k8sHealthzEndpoint: /healthz
+    sslEnabled: false
+    sslCertificate: /etc/falco/certs/falco.pem
+
+extraArgs:
+  - -D
+  - Write below root

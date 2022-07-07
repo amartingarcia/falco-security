@@ -1,0 +1,94 @@
+# https://github.com/falcosecurity/charts/blob/master/falcosidekick/values.yaml
+replicaCount: 1
+
+image:
+  registry: docker.io
+  repository: falcosecurity/falcosidekick
+  tag: 2.26.0
+  pullPolicy: IfNotPresent
+
+podSecurityContext:
+  runAsUser: 1234
+  fsGroup: 1234
+
+securityContext: {}
+
+# One or more secrets to be used when pulling images
+imagePullSecrets: []
+# - registrySecretName
+
+nameOverride: ""
+fullnameOverride: ""
+
+podSecurityPolicy:
+  create: false
+
+priorityClassName: ""
+
+podLabels: {}
+podAnnotations: {}
+
+config:
+  existingSecret: ""
+  extraEnv: []
+  debug: true
+  customfields: ""
+  mutualtlsfilespath: "/etc/certs"
+
+  alertmanager:
+    hostport: "http://alertmanager-operated.kube-prometheus-stack.svc:9093"
+    endpoint: "/api/v1/alerts"
+    minimumpriority: ""
+    mutualtls: false
+    checkcert: true
+
+service:
+  type: ClusterIP
+  port: 2801
+  annotations: {}
+    # networking.gke.io/load-balancer-type: Internal
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: falcosidekick.local
+      paths:
+        - path: /
+          # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.)
+          # pathType: Prefix
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+webui:
+  enabled: false
+
+  replicaCount: 1
+
+  service:
+    # type: LoadBalancer
+    type: ClusterIP
+    port: 2802
+    nodePort: 30282
+    targetPort: 2802
+    annotations: {}
+    # service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+
+  ingress:
+    enabled: false
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: falcosidekick-ui.local
+        paths:
+        - path: /
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
