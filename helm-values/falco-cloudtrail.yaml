@@ -1,0 +1,114 @@
+# https://github.com/falcosecurity/charts/blob/master/falco/values.yaml
+fullnameOverride: "falco-cloudtrail"
+
+auditLog:
+  enabled: false
+
+falco:
+  rulesFile:
+    - /etc/falco/falco_rules.yaml
+    - /etc/falco/falco_rules.local.yaml
+    - /etc/falco/rules.d
+  
+  plugins:
+  - name: cloudtrail
+    library_path: libcloudtrail.so
+    init_config: ""
+    open_params: "sqs://falco"
+  - name: json
+    library_path: libjson.so
+    init_config: ""
+  
+  loadPlugins:  [cloudtrail, json]
+  
+  timeFormatISO8601: true
+  jsonOutput: true
+  jsonIncludeOutputProperty: true
+  jsonIncludeTagsProperty: true
+
+  httpOutput:
+    enabled: true
+    url: "http://falcosidekick:2801"
+    userAgent: "falcosecurity/falco"
+
+  webserver:
+    enabled: false
+
+extraArgs:
+  - -D
+  - Write below root
+
+daemonset:
+  env:
+    AWS_REGION: "eu-west-1"
+    AWS_ACCESS_KEY_ID: AWS_ACCESS_ID
+    AWS_SECRET_ACCESS_KEY: AWS_SECRET_ID
+
+customRules:
+  cloutrail-events.yaml: |-
+    - rule: Create AWS user
+      desc: Detect creation of a new AWS user.
+      condition:
+        ct.name="CreateUser" and not ct.error exists
+      output:
+        A new AWS user has been created
+        (requesting principalId=%ct.user.principalid,
+         requesting IP=%ct.srcip,
+         AWS region=%ct.region,
+         new user created=%ct.request.username)
+      priority: INFO
+      tags:
+        - cloud
+        - aws
+        - aws_iam
+      source: aws_cloudtrail
+      
+    - rule: Delete AWS user
+      desc: Detect deletion of a new AWS user.
+      condition:
+        ct.name="DeleteUser" and not ct.error exists
+      output:
+        A new AWS user has been deleted
+        (requesting principalId=%ct.user.principalid,
+         requesting IP=%ct.srcip,
+         AWS region=%ct.region,
+         new user deleted=%ct.request.username)
+      priority: CRITICAL
+      tags:
+        - cloud
+        - aws
+        - aws_iam
+      source: aws_cloudtrail
+    
+    - rule: Delete Bucket
+      desc: Detect deleted S3 bucket.
+      condition:
+        ct.name="DeleteBucket" and not ct.error exists
+      output:
+        A bucket has been deleted
+        (requesting principalId=%ct.user.principalid,
+         requesting IP=%ct.srcip,
+         AWS region=%ct.region,
+         bucket=%s3.bucket)
+      priority: CRITICAL
+      tags:
+        - cloud
+        - aws
+        - aws_s3
+      source: aws_cloudtrail
+
+    - rule: Modificate Security Group
+      desc: Detect modification of a Security Group.
+      condition:
+        ct.name="ModifySecurityGroupRules" and not ct.error exists
+      output:
+        Security Group has been modificated.
+        (requesting principalId=%ct.user.principalid,
+         requesting IP=%ct.srcip,
+         AWS region=%ct.region)
+      priority: WARNING
+      tags:
+        - cloud
+        - aws
+        - aws_security_group
+      source: aws_cloudtrail
