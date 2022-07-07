@@ -1,4 +1,11 @@
 # Falco
+This repository contains the code necessary for the deployment of falco in Minikube. 
+* __cloudtrail__ plugin: the repository contains the terraform code and the value files for the Falco Helm Chart, Falcosidekick and Alertmanager.
+
+* __k8s_audit__ plugin: this repository contains the necessary configuration to modify the Minikube API Server and send audit logs to a Webhook backend.
+
+It has a support script for deployment.
+
 # Prerequisites
 * Minikube
 * Helm
