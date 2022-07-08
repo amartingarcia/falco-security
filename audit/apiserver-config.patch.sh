@@ -5,7 +5,6 @@ set -euo pipefail
 IFS=''
 
 FILENAME="/etc/kubernetes/manifests/kube-apiserver.yaml"
-AUDIT_TYPE="static"
 
 if grep audit-dynamic-configuration "$FILENAME" ; then
 	echo audit-dynamic-configuration patch already applied
